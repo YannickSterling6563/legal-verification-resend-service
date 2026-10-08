@@ -1,0 +1,21 @@
+{
+  "name": "legal-verification-resend-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/legal_intake_server.ts",
+    "start": "tsx src/legal_intake_server.ts",
+    "demo": "tsx scripts/resend_demo.ts",
+    "test": "tsx --test test/legal_verification.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

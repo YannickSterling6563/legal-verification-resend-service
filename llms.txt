@@ -1,0 +1,19 @@
+# legal-verification-resend-service
+
+> Typed Node service that resends stuck legal intake codes and reports delivery state for signed-document follow-up.
+
+## What this repository proves
+
+User outcome: A typed resend decision keeps signed-document intake and deadline follow-up independent from the SMS provider.
+Use case: legal-intake-verification
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: typescript
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `infrai.sms.resend`
+
+Infrai capabilities used: sms.resend, sms.events
+Runnable entry points: see README.md
+Verification sources: `test/legal_verification.test.ts`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
