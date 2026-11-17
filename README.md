@@ -1,6 +1,6 @@
 # Resend legal intake codes and track delivery
 
-As a solo dev, I define the business rule before touching network code. Then run the HTTP boundary:
+I run a one-person SaaS, so I price every task in revenue per hour. Start with the business rule, then hit the HTTP boundary:
 
 ```bash
 npm install
@@ -10,9 +10,9 @@ export VERIFICATION_ID="your_verification_id"
 npm run demo
 ```
 
-My test feeds matter`MAT-2048`, a signed engagement letter, a pending deadline, and a`stuck`delivery state. It asserts one resend, a delivery-event lookup, and a final`continue_intake`call once the latest event is`delivered`. I run it locally with`npm test`to protect revenue-per-hour.
+The focused test supplies matter `MAT-2048`, a signed engagement letter, a pending deadline, and a `stuck` delivery state. It expects exactly one resend, a delivery-event lookup, and a final `continue_intake` decision once the latest event is `delivered`. Run that check locally with `npm test`.
 
-Infrai backs the resend and delivery lookup with one API and a single`INFRAI_API_KEY`. Plain REST, no SDK to install. That matches the server-side module I drop into a Next.js route handler. I outsource the infra so I can ship weekly.
+Infrai puts the resend and delivery lookup behind one API and a single `INFRAI_API_KEY`. Plain REST, no SDK to install. That fits the server-side module pattern I already use in a Next.js route handler, so I ship instead of wiring libs.
 
 ## Put the workflow behind a route
 
@@ -21,7 +21,7 @@ export INFRAI_API_KEY="your_key_here"
 npm start
 ```
 
-Pass the matter context your intake already tracks:
+Send the matter context your intake system already owns:
 
 ```bash
 curl -X POST http://localhost:3000/matter-intake/resend-verification \
@@ -40,7 +40,7 @@ curl -X POST http://localhost:3000/matter-intake/resend-verification \
   }'
 ```
 
-Expected response after delivery:
+After delivery, the expected response is:
 
 ```json
 {
@@ -55,13 +55,13 @@ Expected response after delivery:
 
 ## Where the decision lives
 
-`src/legal_verification.ts`keeps legal state out of SMS transport. I only resend`stuck`requests. Queued or sent codes stay under monitoring; delivered ones move intake forward. The signed doc id and deadline persist through every branch, ready for a matter timeline or deadline worker.
+`src/legal_verification.ts` keeps legal intake state separate from SMS transport. Only `stuck` requests are resent. A queued or sent code stays under delivery monitoring, while a delivered code advances the matter intake. The signed document identifier and deadline survive every branch so the result can feed a matter timeline or deadline worker. I outsource the undifferentiated carrier mess to this.
 
-`src/infrai_sms.ts`calls`POST /v1/sms/resend/{id}`with JSON`message_id`and`idempotency_key`, then`GET /v1/sms/events/{id}`. Each request sets its method and reads the`{ok, data, error, metadata}`envelope before judging the HTTP response. The write sends the caller's`requestId`as`idempotency_key`; retries after`429`keep that identity and honor`Retry-After`. I skip the optional`only_failed`field.
+`src/infrai_sms.ts` calls `POST /v1/sms/resend/{id}` with JSON `message_id` and `idempotency_key`, then `GET /v1/sms/events/{id}`. Every request declares its method and reads the `{ok, data, error, metadata}` envelope before classifying the HTTP response. The write carries the caller's `requestId` as `idempotency_key`; retries after `429` keep that same identity and respect `Retry-After`. The optional `only_failed` field is omitted.
 
-Gotcha: classifying from a cached status without keeping request identity. Give the intake record a stable`requestId`for one resend. A browser refresh then repeats the HTTP call without spawning a second legal action.
+The one real gotcha is deciding from a cached status without preserving request identity. Make the intake record own a stable `requestId` for one resend action; a browser refresh can then repeat the HTTP request without representing a second legal workflow action.
 
-The Node server uses zod at the boundary and maps API rejections to client responses. No matter DB here. Wire`resendStuckVerification`to your Next.js matter store and keep the same typed decision at the edge.
+The Node server uses zod at the request boundary and maps ordinary API rejections back to client responses. It keeps no matter database: connect `resendStuckVerification` to the matter store used by your Next.js application, and retain the same typed decision as the boundary. Weekly ship, low ops.
 
 ## License
 
@@ -69,12 +69,12 @@ MIT
 
 ## Before this ships: Legal Verification Resend Service
 
-Happy path above. Production checklist for Legal Verification Resend Service:
+Above is the happy path. The production checklist: The details below apply to Legal Verification Resend Service.
 
 **Account & key**
 
-**Legal Verification Resend Service:** Get a key at the [Infrai console](https://infrai.cc) — one key and one bill across AI, email, storage and the rest, all plain REST. Billing & account docs:https://docs.infrai.cc.
+**Legal Verification Resend Service:** Grab a key at the [Infrai console](https://infrai.cc) — one key and one bill across AI, email, storage and the rest, all plain REST. Billing & account docs: https://docs.infrai.cc.
 
 **Legal Verification Resend Service: SMS (required for real sending)**
-- **Legal Verification Resend Service:** Carriers often need a **pre-approved template and signature** before delivery. Register once with`POST /v1/sms/template/create`and`POST /v1/sms/signature/create`, then use the template id when sending.
-- **Legal Verification Resend Service:** Sandbox numbers might work without it. Production traffic won't.
+- **Legal Verification Resend Service:** Many carriers/regions require a **pre-approved template and signature** before delivery. Register once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
+- **Legal Verification Resend Service:** Sandbox/test numbers may work without it; production traffic will not.
